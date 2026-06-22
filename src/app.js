@@ -1,47 +1,24 @@
 const express = require("express");
 
 const app = express();
-app.use(express.json());
+
 const connectDB = require("./config/database");
-const User = require("./models/user");
 
-const { adminAuth, userAuth } = require("./middlewares/Auth");
+const cookieParser = require("cookie-parser");
 
-app.post("/signup", async (req, res) => {
-  console.log(req.body);
-  const user = new User(req.body);
+app.use(express.json());
+app.use(cookieParser());
 
-  try {
-    await user.save();
-    res.send("UserData saved successfully");
-  } catch (err) {
-    res.status(400).send("Error saving the user" + err.message);
-  }
-});
+const authRouter = require("./routes/auth");
+const profileRouter = require("./routes/profile");
+const requestRouter = require("./routes/request");
+const userRouter = require("./routes/user");
 
-app.get("/user", async (req, res) => {
-  const userEmail = req.body.emailId;
 
-  try {
-    const users = await User.findOne({ emailId: userEmail });
-    if (!users) {
-      res.status(400).send("User not found");
-    } else {
-      res.send(users);
-    }
-  } catch (err) {
-    res.status(400).send("Something went wrong");
-  }
-});
-
-app.get("/feed", async (req, res) => {
-  try {
-    const users = await User.find({});
-    res.send(users);
-  } catch (error) {
-    res.status(400).send("Some thing went wrong");
-  }
-});
+app.use("/", authRouter);
+app.use("/", profileRouter);
+app.use("/", requestRouter);
+app.use("/",userRouter)
 
 connectDB()
   .then(() => {
